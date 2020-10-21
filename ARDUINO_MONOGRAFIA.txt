@@ -1,0 +1,88 @@
+#include <LiquidCrystal.h> 
+LiquidCrystal lcd(12, 11, 5, 4, 6, 7);
+
+int  pino_D0 = 2;
+int pino_D1 = 3;
+
+float rpm_1;
+float rpm_2;
+float pulsos_1;
+float timeold_1;
+float pulsos_2;
+float timeold_2;
+
+unsigned int pulsos_por_volta_1 = 19.999;
+unsigned int pulsos_por_volta_2 = 19.999;
+
+void contador()
+{
+    pulsos_1++;
+    pulsos_2++;
+}
+void setup()
+{
+  Serial.begin(115200);
+  pinMode(pino_D0, INPUT);
+  pinMode(pino_D1, INPUT);
+  
+  attachInterrupt(digitalPinToInterrupt(2), contador, FALLING);
+  attachInterrupt(digitalPinToInterrupt(3), contador, FALLING);
+  
+  pulsos_1 = 0;
+  rpm_1 = 0;
+  timeold_1 = 0;
+  pulsos_2 = 0;
+  rpm_2 = 0;
+  timeold_2 = 0;
+  
+  lcd.begin(16, 2);
+  lcd.setCursor(0,0);
+  lcd.print("rpm_M1: "); 
+  lcd.setCursor(0,1);
+  lcd.print("rpm_M2: ");
+}
+void loop()
+{
+   
+  //Atualiza contador a cada segundo
+  if (millis() - timeold_1 >= 1000)
+  {
+    //Desabilita interrupcao durante o calculo
+    detachInterrupt(2);
+  rpm_1 = (60 * 1000 / pulsos_por_volta_1 ) / (millis() - timeold_1) * pulsos_1;
+  timeold_1 = millis();
+    pulsos_1 = 0;
+    Serial.print("rpm_1 = ");
+    Serial.print(rpm_1, DEC);
+    
+    attachInterrupt(digitalPinToInterrupt(2), contador, FALLING);
+   
+
+    
+    if (millis() - timeold_2 >= 1000)
+{
+    //Desabilita interrupcao durante o calculo
+    detachInterrupt(3);
+   rpm_2 = (60 * 1000 / pulsos_por_volta_2 ) / (millis() - timeold_2) * pulsos_2;
+   timeold_2 = millis();
+   pulsos_2 = 0;
+    Serial.print("rpm_2 = ");
+    Serial.print(rpm_2, DEC);
+   
+    
+   attachInterrupt(digitalPinToInterrupt(3), contador, FALLING);
+   
+ lcd.begin(16,2);
+  
+  lcd.setCursor(0,1);
+  lcd.print("rpm:  ");
+  lcd.print(rpm_1);
+ 
+  lcd.setCursor(0,0);
+  lcd.print(" EL - 007");
+  /*lcd.print(rpm_2);*/
+ 
+}
+  }
+}
+  
